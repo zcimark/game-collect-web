@@ -8,5 +8,4 @@
 /var/
 /vendor/
 /logs/
-/logs/nginx/project_access.log
 ###< symfony/framework-bundle ###
