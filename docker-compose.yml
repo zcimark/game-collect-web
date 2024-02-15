@@ -1,0 +1,80 @@
+services:
+  game-collection-api:
+          build:
+              args:
+                  user: admin
+                  uid: 1000
+              context: ./backend
+              dockerfile: docker/Dockerfile
+          container_name: game-collect-api
+          restart: unless-stopped
+          working_dir: /var/www
+          volumes:
+              - ./backend/:/var/www/
+          networks:
+              - gcw-net
+  game-collection-frontend:
+      build:
+        context: ./frontend
+        dockerfile: docker/Dockerfile
+      image: node:lts
+      working_dir: /var/www/html/app/
+      entrypoint: /bin/bash
+      ports:
+      - "9000:9000"
+      - "5173:5173"
+    #   command: npm install && npm run dev
+      expose:
+        - 5000
+      volumes:
+      - ./frontend/:/var/www/html/app
+      tty: true
+      environment:
+        - VUE_APP_API_URL=http://game-collect-api/api
+      networks:
+            - gcw-net
+  game-collection-pgsql:
+          image: 'postgres:latest'
+          ports:
+              - '${FORWARD_DB_PORT:-5432}:5432'
+          environment:
+              PGPASSWORD: '${DB_PASSWORD:-secret}'
+              POSTGRES_DB: '${DB_DATABASE}'
+              POSTGRES_USER: '${DB_USERNAME}'
+              POSTGRES_PASSWORD: '${DB_PASSWORD:-secret}'
+          volumes:
+          - gcw-pgsql:/var/lib/postgresql/data
+          networks:
+              - gcw-net
+          healthcheck:
+              test:
+                  - CMD
+                  - pg_isready
+                  - '-q'
+                  - '-d'
+                  - '${DB_DATABASE}'
+                  - '-U'
+                  - '${DB_USERNAME}'
+              retries: 3
+              timeout: 5s
+  game-collection-nginx:
+        build:
+          context: ./backend/docker/nginx
+        container_name: nginx
+        volumes:
+            - .:/var/www:rw
+            - ./backend/:/var/www
+            - ./backend/logs/nginx:/var/log/nginx/:rw
+        ports:
+            - 80:80
+        restart: always
+        depends_on:
+            - game-collection-api
+        networks:
+            - gcw-net
+networks:
+    gcw-net:
+        driver: bridge
+volumes:
+    gcw-pgsql:
+        driver: local
