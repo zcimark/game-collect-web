@@ -117,4 +117,22 @@ class GameController extends AbstractController
             return $this->json(['errors' => 'Unable to delete game'], Response::HTTP_BAD_REQUEST);
         }
     }
+
+    #[Route('/api/search-game/{q}', name: 'game_search', methods: 'GET')]
+    public function search(EntityManagerInterface $entityManager, $q): Response
+    {
+        try {
+            $queryTitles = $this->gameRepository::searchTitles($q);
+
+            $results = $this->gameRepository->matching($queryTitles);
+
+
+            $responseData = $this->serializer->serialize($results, 'json'); 
+            return new Response($responseData);
+        
+        } catch (\Exception $e) {
+            return $this->json(['errors' => $e->getMessage()], Response::HTTP_BAD_REQUEST);
+        }
+           
+    }
 }
