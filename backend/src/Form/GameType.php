@@ -5,6 +5,8 @@ namespace App\Form;
 use App\Entity\Game;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\FormBuilderInterface;
+use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
+use Symfony\Component\Validator\Constraints\NotBlank;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 
 class GameType extends AbstractType
@@ -23,6 +25,9 @@ class GameType extends AbstractType
     {
         $resolver->setDefaults([
             'data_class' => Game::class,
+            'constraints' => [
+                new UniqueEntity(fields: ['title']),
+            ],
         ]);
     }
 }

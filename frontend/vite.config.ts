@@ -10,6 +10,15 @@ export default defineConfig({
     vue(),
     vueJsx(),
   ],
+  server: {
+    proxy: {
+      '/api': {
+        target: "http://host.docker.internal:80",
+        changeOrigin: true,
+        secure: false,
+      }
+    }
+  },
   resolve: {
     alias: {
       '@': fileURLToPath(new URL('./src', import.meta.url))
